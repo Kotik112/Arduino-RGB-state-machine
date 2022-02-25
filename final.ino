@@ -46,7 +46,7 @@ void setup() {
 void loop() {
   
   if(potentiometer_change()) {
-    sensor_value = analogRead(A0);
+    sensor_value = analogRead(A0);    
   }
   
   if (!Serial.available()) {
@@ -63,11 +63,10 @@ void loop() {
 
 bool potentiometer_change() {
   int sensor_now = analogRead(A0);
-  if (last_sensor_value != sensor_now || last_sensor_value != sensor_now+1 || last_sensor_value != sensor_now-1) {
-    Serial.println("True");
+  if  (abs(sensor_now - last_sensor_value) >  3) {
+    last_sensor_value = sensor_now;
     return true;
   }
-  last_sensor_value = sensor_now;
   return false;
 }
 
@@ -273,10 +272,12 @@ void menu_handler() {
         Serial.println("Value must be numerical.");
       }
       else {
-        sensor_value = (value - '0') * 10; //multiply by 10 to incease the difference
+        sensor_value = (value - '0') * 100; //multiply by 10 to incease the difference
         Serial.println(sensor_value);
       }
-
+    }
+    else {
+      Serial.println("Invalid command.");
     }
  }
   

@@ -13,6 +13,4 @@ typedef struct {
   FSM_STATES_t next_state;  
 } state_struct_t;
 
-int state_executer(int state, int sensor_value);
-
 #endif

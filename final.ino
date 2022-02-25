@@ -29,11 +29,8 @@ int fade_state = RED_GREEN;
 int machine_state = 0;
 state_struct_t machine_state1 = {RGB, RAINBOW}; //Default value
 
-//Interrupt variables
-volatile int button_flag;
-static unsigned long last_interrupt_time = 0;
-
 int sensor_value;
+int last_sensor_value;
 
 void setup() {
   Serial.begin(9600);
@@ -46,21 +43,35 @@ void setup() {
 }
 
 
-void loop() {  
+void loop() {
+  
+  if(potentiometer_change()) {
+    sensor_value = analogRead(A0);
+  }
+  
   if (!Serial.available()) {
-    key1_function();
-    key2_function();
+    key1_function(sensor_value);
+    key2_function(sensor_value);
     state_executer(machine_state, sensor_value);
   }
   if (Serial.available()) {
-    Serial.println("Type 'menu' for available commands:");
-    menu_handler();
-    state_executer(machine_state, sensor_value);
+  menu_handler();
+  //state_executer(machine_state, sensor_value);
   }
   
 }
 
-void key1_function() {
+bool potentiometer_change() {
+  int sensor_now = analogRead(A0);
+  if (last_sensor_value != sensor_now || last_sensor_value != sensor_now+1 || last_sensor_value != sensor_now-1) {
+    Serial.println("True");
+    return true;
+  }
+  last_sensor_value = sensor_now;
+  return false;
+}
+
+void key1_function(int sensor_value) {
   int key_state = digitalRead(key1);
   if (time_checker(&debouncer) && key_state != last_key1_state) {
     last_key1_state = key_state;
@@ -79,9 +90,9 @@ void key1_function() {
   }
 }
 
-void key2_function() {
+void key2_function(int sensor_value) {
   int key_state = digitalRead(key2);
-  if (time_checker(&debouncer)) { //  && attachInterrupt(digitalPinToInterrupt(key1_interrupt), ISR_button, RISING)
+  if (time_checker(&debouncer)) {
     if( key_state != last_key2_state) {
       last_key2_state = key_state;
       if(key_state == HIGH) {
@@ -105,8 +116,7 @@ bool time_checker(timer_t* time_struct) {
   return false;
 }
 
-void change_rgb() {
-  Serial.println(sensor_value);
+void change_rgb(const int sensor_value) {
   int brightness = sensor_value / 4;
   switch(rgb_state){
     case RED:
@@ -115,19 +125,19 @@ void change_rgb() {
       analogWrite(bluePin, 255);
       break;
 
-    case GREEN:
+     case GREEN:
       analogWrite(redPin, 255);
       analogWrite(greenPin, brightness);
       analogWrite(bluePin, 255);
       break;
 
-    case BLUE:
+     case BLUE:
       analogWrite(redPin, 255);
       analogWrite(greenPin, 255);
       analogWrite(bluePin, brightness);
       break;
 
-    case OFF:
+     case OFF:
       analogWrite(redPin, 255);
       analogWrite(greenPin, 255);
       analogWrite(bluePin, 255);
@@ -144,7 +154,7 @@ void rgb(rgb_t rgb_values) {
   analogWrite(bluePin, rgb_values.b);
 }
 
-void rainbow() {
+void rainbow(const int sensor_value) {
   //FOR DEBUGGING PURPOSES
   /*if(time_checker(&test)) {
     Serial.println("RGB");
@@ -152,7 +162,7 @@ void rainbow() {
     Serial.println(rgb_values.g);
     Serial.println(rgb_values.b);
   }*/
-  sensor_value = analogRead(A0);
+
   int rainbow_speed = sensor_value / 25;
   fade_delay.interval = rainbow_speed;
   if(time_checker(&fade_delay) && fade_counter < 255) {
@@ -199,28 +209,16 @@ void rainbow() {
 int state_executer(int state, int sensor_value) {
     switch (state) {
       case RGB:
-        change_rgb();
+        change_rgb(sensor_value);
         break;
 
       case RAINBOW:
-        rainbow();
-        break;
-
-      case SERIAL_COM:
-        //WIP
-        break;
-
-      case LED_OFF:
-        //WIP
+        rainbow(sensor_value);
         break;
 
       default:
         machine_state = 0;
     }
-}
-
-int state_changer(int* state, state_struct_t machine_state) {
-    
 }
 
 void print_menu(void) {
@@ -230,12 +228,15 @@ void print_menu(void) {
   Serial.println("|****************************|");
   Serial.println("");
   Serial.println("Type one of the following options:");
+  Serial.println("red / green / blue / rainbow or off");
   Serial.println("red / green / blue / rainbow or off.");
   Serial.println("To use the potentiometer, use 'pot' followed by a value (0-9).");
   Serial.println("For example 'pot1' or 'pot9'.");
 }
 
 void menu_handler() {
+  Serial.println("Type 'menu' for available commands:");
+    
     String menu_choice = Serial.readString();
     if(menu_choice.compareTo("red") == 0) {
       Serial.println("LED light RED");
@@ -267,23 +268,15 @@ void menu_handler() {
       char buffer[15]; 
       menu_choice.toCharArray(buffer, 15);
       char value = buffer[3];
+      
       if(!isDigit(value)) {
         Serial.println("Value must be numerical.");
       }
       else {
-        sensor_value = (value - '0')*10;
-        //Serial.println(sensor_value);
+        sensor_value = (value - '0') * 10; //multiply by 10 to incease the difference
+        Serial.println(sensor_value);
       }
-      
+
     }
  }
   
-/* void ISR_button() {
-  unsigned long interrupt_time = millis();
-  // If interrupts come faster than 200ms, assume it's a bounce and ignore
-  if (interrupt_time - last_interrupt_time > 100) 
-  {
-    button_flag = 1;
-  }
-  last_interrupt_time = interrupt_time;
-} */

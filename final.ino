@@ -40,6 +40,8 @@ void setup() {
   pinMode(redPin, INPUT);
   pinMode(greenPin, INPUT);
   pinMode(bluePin, INPUT);
+
+  //Serial.println("Type 'menu' for available commands:");
 }
 
 
@@ -234,7 +236,7 @@ void print_menu(void) {
 }
 
 void menu_handler() {
-  Serial.println("Type 'menu' for available commands:");
+  //Serial.println("Type 'menu' for available commands:");
     
     String menu_choice = Serial.readString();
     if(menu_choice.compareTo("red") == 0) {
@@ -273,11 +275,9 @@ void menu_handler() {
       }
       else {
         sensor_value = (value - '0') * 100; //multiply by 10 to incease the difference
-        Serial.println(sensor_value);
+        //Serial.println(sensor_value);
       }
-    }
-    else {
-      Serial.println("Invalid command.");
+
     }
  }
   

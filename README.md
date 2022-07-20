@@ -3,6 +3,7 @@
 ## How to run the program:
 The sketch is run using the Arduino IDE (https://www.arduino.cc/en/software)
 
+## Description:
 An arduino sketch that acts as a state machine to switch between two modes. RGB and Rainbow mode.
 Note that the code is written for an arduino shield made by me as student. The blueprint for the PCB is:
 
